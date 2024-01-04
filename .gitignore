@@ -1,0 +1,4 @@
+.env
+/cmd/app/app
+/cmd/migrate/migrate
+/cmd/seed/seed
