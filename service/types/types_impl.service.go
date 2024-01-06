@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/model"
@@ -52,4 +53,20 @@ func (s *Type) GetAllTypes(c *gin.Context, pageParam, limitParam, orderByParam, 
 	}
 
 	return dataTypes, paginate, nil
+}
+
+func (s *Type) FindTypeById(c *gin.Context, typeId string, startTime time.Time) (model.Types, error) {
+	var (
+		typ model.Types
+		err error
+	)
+
+	typ, err = s.typeMysql.FindById(typeId)
+	if err != nil {
+		err = fmt.Errorf("type_id '%s' not found", typeId)
+		helper.ResponseAPI(c, http.StatusNotFound, err.Error(), startTime)
+		return typ, err
+	}
+
+	return typ, nil
 }

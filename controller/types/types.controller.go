@@ -7,6 +7,7 @@ import (
 
 type TypeController interface {
 	GetAllTypes(c *gin.Context)
+	FindTypeById(c *gin.Context)
 }
 
 type MasterTypes struct {

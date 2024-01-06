@@ -28,6 +28,7 @@ func (r *RouteService) InitRouter() {
 		types := endpoint.Group("/type")
 		{
 			types.GET("", r.TypeService.GetAllTypes)
+			types.GET("/:typeId", r.TypeService.FindTypeById)
 		}
 
 	}

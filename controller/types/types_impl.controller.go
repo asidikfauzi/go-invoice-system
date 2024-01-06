@@ -25,10 +25,23 @@ func (m *MasterTypes) GetAllTypes(c *gin.Context) {
 	dataType, paginate, err := m.TypeService.GetAllTypes(c, pageParam, limitParam, orderByParam, request.TypeName, startTime)
 	if err != nil {
 		log.Printf("error type controller GetAllTypes :%s", err)
-		helper.ResponseAPI(c, http.StatusInternalServerError, err.Error(), startTime)
 		return
 	}
 
-	helper.SuccessResponseWithPagination(c, http.StatusOK, helper.SuccessGetData, dataType, paginate, startTime)
+	helper.ResponseDataAPIWithPagination(c, http.StatusOK, helper.SuccessGetData, dataType, paginate, startTime)
 	return
+}
+
+func (m *MasterTypes) FindTypeById(c *gin.Context) {
+	startTime := time.Now()
+
+	typeId := c.Param("typeId")
+	dataType, err := m.TypeService.FindTypeById(c, typeId, startTime)
+	if err != nil {
+		log.Printf("error type controller FindTypeById :%s", err)
+		return
+	}
+	helper.ResponseDataAPI(c, http.StatusOK, helper.SuccessGetData, dataType, startTime)
+	return
+
 }
