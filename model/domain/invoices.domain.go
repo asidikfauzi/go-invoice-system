@@ -24,5 +24,5 @@ type Invoices struct {
 	DeletedByID       *uuid.UUID `gorm:"type:char(36);default:null" json:"deleted_by_id"`
 
 	//REFERENCE
-	Customer Customers `gorm:"foreignKey:CustomerID;references:id_customer" json:"customer"`
+	Customer Customers `gorm:"foreignKey:CustomerID;references:id_customer" json:"customers"`
 }
