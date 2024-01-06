@@ -1,10 +1,11 @@
 package inject
 
 import (
-	"fmt"
 	"github.com/facebookgo/inject"
 	"go-invoice-system/common/database"
+	typeMysql "go-invoice-system/repository/mysql/types"
 	"go-invoice-system/route"
+	typeService "go-invoice-system/service/types"
 	"log"
 )
 
@@ -18,23 +19,30 @@ func DependencyInjection(liq InjectData) {
 		panic("Failed to connect to database: " + err.Error())
 	}
 
-	fmt.Println(db)
+	// MYSQL
+	typeMysql := typeMysql.NewTypeMysql(db)
 
-	dependencies := []*inject.Object{}
+	// SERVICE
+	typeService := typeService.NewTypeService(typeMysql)
+
+	dependencies := []*inject.Object{
+		{Value: typeService, Name: "types_service"},
+	}
 
 	if liq.Routes != nil {
 		dependencies = append(dependencies,
 			&inject.Object{Value: liq.Routes, Name: "routes"},
+			&inject.Object{Value: liq.Routes.TypeService, Name: "controller_type_master"},
 		)
 	}
 
 	// dependency injection
 	var g inject.Graph
-	if err := g.Provide(dependencies...); err != nil {
+	if err = g.Provide(dependencies...); err != nil {
 		log.Fatal("Failed Inject Dependencies", err)
 	}
 
-	if err := g.Populate(); err != nil {
+	if err = g.Populate(); err != nil {
 		log.Fatal("Failed Populate Inject Dependencies", err)
 	}
 
