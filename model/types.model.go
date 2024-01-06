@@ -11,6 +11,6 @@ type (
 	}
 
 	RequestType struct {
-		TypeName string `json:"type_name"`
+		TypeName string `json:"type_name" validate:"required"`
 	}
 )

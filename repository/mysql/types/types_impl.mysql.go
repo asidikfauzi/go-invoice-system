@@ -2,6 +2,7 @@ package types
 
 import (
 	"go-invoice-system/model"
+	"go-invoice-system/model/domain"
 	"gorm.io/gorm"
 )
 
@@ -52,4 +53,18 @@ func (m *Types) FindById(typeId string) (model.Types, error) {
 	}
 
 	return typ, nil
+}
+
+func (m *Types) FindByName(typeName string) (model.Types, error) {
+	var typ model.Types
+
+	if err := m.DB.Where("type_name = ?", typeName).First(&typ).Error; err != nil {
+		return typ, err
+	}
+
+	return typ, nil
+}
+
+func (m *Types) Create(typ *domain.Types) error {
+	return m.DB.Create(typ).Error
 }

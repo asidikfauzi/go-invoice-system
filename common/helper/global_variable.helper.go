@@ -28,6 +28,14 @@ const (
 
 // Message Response
 const (
+	Success             = "Success"
+	SuccessCreated      = "Success Created"
+	NotFound            = "Not Found"
+	BadRequest          = "Bad Request"
+	Conflict            = "Conflict"
+	UnprocessableEntity = "Unprocessable Entity"
+	InternalServerError = "Internal Server Error"
+
 	SuccessGetData     = "Successfully Get Data!"
 	SuccessCreatedData = "Successfully Created Data!"
 	SuccessUpdatedData = "Successfully Updated Data!"

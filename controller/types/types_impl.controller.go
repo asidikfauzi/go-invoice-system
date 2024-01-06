@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/gin-gonic/gin"
 	"go-invoice-system/common/helper"
+	"go-invoice-system/common/validator"
 	"go-invoice-system/model"
 	"log"
 	"net/http"
@@ -14,7 +15,7 @@ func (m *MasterTypes) GetAllTypes(c *gin.Context) {
 
 	var request model.Types
 	if err := c.ShouldBindJSON(&request); err != nil {
-		helper.ResponseAPI(c, http.StatusInternalServerError, err.Error(), startTime)
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
 		return
 	}
 
@@ -28,7 +29,7 @@ func (m *MasterTypes) GetAllTypes(c *gin.Context) {
 		return
 	}
 
-	helper.ResponseDataAPIWithPagination(c, http.StatusOK, helper.SuccessGetData, dataType, paginate, startTime)
+	helper.ResponseDataPaginationAPI(c, true, http.StatusOK, helper.Success, []string{helper.SuccessGetData}, dataType, paginate, startTime)
 	return
 }
 
@@ -41,7 +42,33 @@ func (m *MasterTypes) FindTypeById(c *gin.Context) {
 		log.Printf("error type controller FindTypeById :%s", err)
 		return
 	}
-	helper.ResponseDataAPI(c, http.StatusOK, helper.SuccessGetData, dataType, startTime)
+
+	helper.ResponseDataAPI(c, true, http.StatusOK, helper.Success, []string{helper.SuccessGetData}, dataType, startTime)
+	return
+}
+
+func (m *MasterTypes) CreateType(c *gin.Context) {
+	startTime := time.Now()
+
+	var request model.RequestType
+	if err := c.ShouldBindJSON(&request); err != nil {
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return
+	}
+
+	validate := validator.ValidatorMessage(request)
+	if len(validate) > 0 {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, validate, startTime)
+		return
+	}
+
+	msg, err := m.TypeService.CreateType(c, request, startTime)
+	if err != nil {
+		log.Printf("error type controller CreateType :%s", err)
+		return
+	}
+
+	helper.ResponseAPI(c, true, http.StatusCreated, helper.SuccessCreated, []string{msg}, startTime)
 	return
 
 }
