@@ -1,0 +1,39 @@
+version: "3"
+services:
+  mysql:
+    hostname: gis_mysql
+    container_name: gis_mysql
+    build:
+      context: .
+      dockerfile: common/docker/mysql/Dockerfile
+    platform: linux/x86_64
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/Users/harshvardhan.singh/study/docker/mysql/data_folder:/var/lib/mysql
+  rabbitmq:
+    hostname: gis_rabbitmq
+    container_name: gis_rabbitmq
+    build:
+      context: .
+      dockerfile: common/docker/rabbitmq/Dockerfile
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/data
+  redis:
+    hostname: gis_redis
+    container_name: gis_redis
+    image: redis:7.2.0-alpine3.18
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  rabbitmq_data:
+  redis_data:
