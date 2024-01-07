@@ -1,0 +1,14 @@
+package invoices
+
+import (
+	"github.com/gin-gonic/gin"
+	"go-invoice-system/service/invoices"
+)
+
+type InvoiceController interface {
+	GetAllInvoices(c *gin.Context)
+}
+
+type MasterInvoices struct {
+	InvoiceService invoices.InvoicesService `inject:"invoices_service"`
+}

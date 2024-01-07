@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/controller/customers"
+	"go-invoice-system/controller/invoices"
 	"go-invoice-system/controller/items"
 	"go-invoice-system/controller/types"
 )
@@ -16,6 +17,7 @@ type RouteService struct {
 	TypeService     types.TypeController         `inject:"controller_type_master"`
 	CustomerService customers.CustomerController `inject:"controller_customer_master"`
 	ItemService     items.ItemController         `inject:"controller_item_master"`
+	InvoiceService  invoices.InvoiceController   `inject:"controller_invoice_master"`
 }
 
 func InitPackage() *RouteService {
@@ -23,6 +25,7 @@ func InitPackage() *RouteService {
 		TypeService:     &types.MasterTypes{},
 		CustomerService: &customers.MasterCustomers{},
 		ItemService:     &items.MasterItems{},
+		InvoiceService:  &invoices.MasterInvoices{},
 	}
 }
 
@@ -56,6 +59,11 @@ func (r *RouteService) InitRouter() {
 			items.POST("", r.ItemService.CreateItem)
 			items.PATCH("/:itemId", r.ItemService.UpdateItem)
 			items.DELETE("/:itemId", r.ItemService.DeleteItem)
+		}
+
+		invoices := endpoint.Group("/invoice")
+		{
+			invoices.GET("", r.InvoiceService.GetAllInvoices)
 		}
 
 	}

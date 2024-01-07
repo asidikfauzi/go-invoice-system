@@ -17,6 +17,6 @@ type InvoiceHasItems struct {
 	DeletedByID *uuid.UUID `gorm:"type:char(36);default:null" json:"deleted_by_id"`
 
 	// REFERENCES
-	Invoice Invoices `gorm:"foreignKey:InvoiceID;references:id_invoice" json:"invoice"`
-	Item    Items    `gorm:"foreignKey:ItemID;references:id_item" json:"item"`
+	Invoices Invoices `gorm:"foreignKey:InvoiceID;references:id_invoice" json:"invoice"`
+	Items    Items    `gorm:"foreignKey:ItemID;references:id_item" json:"item"`
 }

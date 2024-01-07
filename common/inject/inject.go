@@ -4,10 +4,12 @@ import (
 	"github.com/facebookgo/inject"
 	"go-invoice-system/common/database"
 	customerMysql "go-invoice-system/repository/mysql/customers"
+	invoiceMysql "go-invoice-system/repository/mysql/invoices"
 	itemMysql "go-invoice-system/repository/mysql/items"
 	typeMysql "go-invoice-system/repository/mysql/types"
 	"go-invoice-system/route"
 	customerService "go-invoice-system/service/customers"
+	invoiceService "go-invoice-system/service/invoices"
 	itemService "go-invoice-system/service/items"
 	typeService "go-invoice-system/service/types"
 	"log"
@@ -27,16 +29,19 @@ func DependencyInjection(liq InjectData) {
 	typeMysql := typeMysql.NewTypeMysql(db)
 	customerMysql := customerMysql.NewCustomerMysql(db)
 	itemMysql := itemMysql.NewItemMysql(db)
+	invoiceMysql := invoiceMysql.NewInvoiceMysql(db)
 
 	// SERVICE
 	typeService := typeService.NewTypeService(typeMysql)
 	customerService := customerService.NewCustomerService(customerMysql)
 	itemService := itemService.NewItemService(itemMysql, typeMysql)
+	invoiceService := invoiceService.NewInvoiceService(invoiceMysql)
 
 	dependencies := []*inject.Object{
 		{Value: typeService, Name: "types_service"},
 		{Value: customerService, Name: "customers_service"},
 		{Value: itemService, Name: "items_service"},
+		{Value: invoiceService, Name: "invoices_service"},
 	}
 
 	if liq.Routes != nil {
@@ -45,6 +50,7 @@ func DependencyInjection(liq InjectData) {
 			&inject.Object{Value: liq.Routes.TypeService, Name: "controller_type_master"},
 			&inject.Object{Value: liq.Routes.CustomerService, Name: "controller_customer_master"},
 			&inject.Object{Value: liq.Routes.ItemService, Name: "controller_item_master"},
+			&inject.Object{Value: liq.Routes.InvoiceService, Name: "controller_invoice_master"},
 		)
 	}
 
