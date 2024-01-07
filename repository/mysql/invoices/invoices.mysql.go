@@ -6,4 +6,5 @@ import (
 
 type InvoicesMysql interface {
 	GetAll(limit, offset int, orderBy string, request model.RequestInvoices) ([]model.GetInvoices, int64, error)
+	FindById(invoiceId string) (model.GetInvoice, error)
 }

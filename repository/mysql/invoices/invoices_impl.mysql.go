@@ -98,3 +98,64 @@ func (m *Invoices) GetAll(limit, offset int, orderBy string, request model.Reque
 
 	return data, totalCount, nil
 }
+
+func (m *Invoices) FindById(invoiceId string) (model.GetInvoice, error) {
+	var (
+		invoice         domain.Invoices
+		invoiceHasItems []domain.InvoiceHasItems
+		items           []model.GetItem
+		data            model.GetInvoice
+	)
+
+	if err := m.DB.Preload("Customers").
+		Joins("JOIN customers c ON invoices.customer_id = c.id_customer").
+		Where("invoices.id_invoice = ?", invoiceId).
+		Where("invoices.deleted_at IS NULL").
+		First(&invoice).Error; err != nil {
+		return data, err
+	}
+
+	if err := m.DB.Preload("Items").
+		Preload("Items.Types").
+		Joins("JOIN items i ON invoice_has_items.item_id = i.id_item").
+		Joins("JOIN types t ON i.type_id = t.id_type").
+		Where("invoice_has_items.invoice_id = ?", invoiceId).
+		Where("invoice_has_items.deleted_at IS NULL").
+		Find(&invoiceHasItems).Error; err != nil {
+		return data, err
+	}
+
+	for _, ihi := range invoiceHasItems {
+		item := model.GetItem{
+			IDItem:       ihi.Items.IDItem,
+			ItemName:     ihi.Items.ItemName,
+			ItemQuantity: ihi.Items.ItemQuantity,
+			ItemPrice:    ihi.Items.ItemPrice,
+			TypeID:       ihi.Items.Types.IDType,
+			TypeName:     ihi.Items.Types.TypeName,
+		}
+
+		items = append(items, item)
+	}
+
+	data = model.GetInvoice{
+		IDInvoice:         invoice.IDInvoice,
+		InvoiceID:         invoice.InvoiceID,
+		InvoiceSubject:    invoice.InvoiceSubject,
+		InvoiceIssueDate:  invoice.InvoiceIssueDate,
+		InvoiceDueDate:    invoice.InvoiceDueDate,
+		InvoiceTotalItem:  invoice.InvoiceTotalItem,
+		InvoiceSubTotal:   invoice.InvoiceSubTotal,
+		InvoiceTax:        invoice.InvoiceTax,
+		InvoiceGrandTotal: invoice.InvoiceGrandTotal,
+		InvoiceStatus:     invoice.InvoiceStatus,
+		Customer: model.GetCustomer{
+			IDCustomer:      invoice.Customers.IDCustomer,
+			CustomerName:    invoice.Customers.CustomerName,
+			CustomerAddress: invoice.Customers.CustomerAddress,
+		},
+		Items: items,
+	}
+
+	return data, nil
+}

@@ -1,6 +1,7 @@
 package invoices
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/model"
@@ -52,4 +53,20 @@ func (s *Invoice) GetAllInvoices(c *gin.Context, pageParam, limitParam, orderByP
 	}
 
 	return dataInvoices, paginate, nil
+}
+
+func (s *Invoice) FindInvoiceById(c *gin.Context, invoiceId string, startTime time.Time) (model.GetInvoice, error) {
+	var (
+		invoice model.GetInvoice
+		err     error
+	)
+
+	invoice, err = s.invoiceMysql.FindById(invoiceId)
+	if err != nil {
+		err = fmt.Errorf("invoice_id '%s' not found", invoiceId)
+		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+		return invoice, err
+	}
+
+	return invoice, nil
 }

@@ -7,6 +7,7 @@ import (
 
 type InvoiceController interface {
 	GetAllInvoices(c *gin.Context)
+	FindInvoiceById(c *gin.Context)
 }
 
 type MasterInvoices struct {

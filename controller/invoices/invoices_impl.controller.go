@@ -31,3 +31,17 @@ func (m *MasterInvoices) GetAllInvoices(c *gin.Context) {
 	helper.ResponseDataPaginationAPI(c, true, http.StatusOK, helper.Success, []string{helper.SuccessGetData}, dataInvoice, paginate, startTime)
 	return
 }
+
+func (m *MasterInvoices) FindInvoiceById(c *gin.Context) {
+	startTime := time.Now()
+
+	invoiceId := c.Param("invoiceId")
+	dataItem, err := m.InvoiceService.FindInvoiceById(c, invoiceId, startTime)
+	if err != nil {
+		log.Printf("error invoice controller FindInvoiceById :%s", err)
+		return
+	}
+
+	helper.ResponseDataAPI(c, true, http.StatusOK, helper.Success, []string{helper.SuccessGetData}, dataItem, startTime)
+	return
+}
