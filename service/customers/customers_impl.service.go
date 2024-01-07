@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/model"
+	"go-invoice-system/model/domain"
 	"go-invoice-system/repository/mysql/customers"
 	"log"
 	"math"
@@ -83,7 +84,7 @@ func (s *Customer) CreateCustomer(c *gin.Context, request model.RequestCustomer,
 		return "", err
 	}
 
-	customers := model.Customers{
+	customers := domain.Customers{
 		IDCustomer:      uuid.New(),
 		CustomerName:    request.CustomerName,
 		CustomerAddress: request.CustomerAddress,
@@ -116,7 +117,7 @@ func (s *Customer) UpdateCustomer(c *gin.Context, request model.RequestCustomer,
 	}
 
 	timeUpdate := time.Now()
-	customers := model.Customers{
+	customers := domain.Customers{
 		IDCustomer:      customerIdUuid,
 		CustomerName:    request.CustomerName,
 		CustomerAddress: request.CustomerAddress,
@@ -156,7 +157,7 @@ func (s *Customer) DeleteCustomer(c *gin.Context, customerId string, startTime t
 	}
 
 	timeDelete := time.Now()
-	customers := model.Customers{
+	customers := domain.Customers{
 		IDCustomer: customerIdUuid,
 		DeletedAt:  &timeDelete,
 	}

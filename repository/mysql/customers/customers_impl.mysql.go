@@ -2,6 +2,7 @@ package customers
 
 import (
 	"go-invoice-system/model"
+	"go-invoice-system/model/domain"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ func NewCustomerMysql(conn *gorm.DB) CustomersMysql {
 
 func (m *Customers) GetAll(limit, offset int, orderBy, customerName string) ([]model.GetCustomer, int64, error) {
 	var (
-		customers  []model.Customers
+		customers  []domain.Customers
 		data       []model.GetCustomer
 		totalCount int64
 	)
@@ -38,7 +39,7 @@ func (m *Customers) GetAll(limit, offset int, orderBy, customerName string) ([]m
 		return nil, totalCount, err
 	}
 
-	if err := query.Model(&model.Customers{}).Count(&totalCount).Error; err != nil {
+	if err := query.Model(&domain.Customers{}).Count(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -56,7 +57,7 @@ func (m *Customers) GetAll(limit, offset int, orderBy, customerName string) ([]m
 
 func (m *Customers) FindById(customerId string) (model.GetCustomer, error) {
 	var (
-		customer model.Customers
+		customer domain.Customers
 		data     model.GetCustomer
 	)
 
@@ -77,7 +78,7 @@ func (m *Customers) FindById(customerId string) (model.GetCustomer, error) {
 
 func (m *Customers) FindByName(customerName string) (model.GetCustomer, error) {
 	var (
-		customer model.Customers
+		customer domain.Customers
 		data     model.GetCustomer
 	)
 
@@ -94,7 +95,7 @@ func (m *Customers) FindByName(customerName string) (model.GetCustomer, error) {
 	return data, nil
 }
 
-func (m *Customers) CheckUpdateExists(customer model.Customers) (bool, error) {
+func (m *Customers) CheckUpdateExists(customer domain.Customers) (bool, error) {
 	err := m.DB.Where("customer_name = ?", customer.CustomerName).
 		Where("id_customer != ? ", customer.IDCustomer).
 		Where("deleted_at IS NULL").First(&customer).Error
@@ -106,12 +107,12 @@ func (m *Customers) CheckUpdateExists(customer model.Customers) (bool, error) {
 	return true, nil
 }
 
-func (m *Customers) Create(customer *model.Customers) error {
+func (m *Customers) Create(customer *domain.Customers) error {
 	return m.DB.Create(customer).Error
 }
 
-func (m *Customers) Update(customer *model.Customers) error {
-	updateCustomer := model.Customers{
+func (m *Customers) Update(customer *domain.Customers) error {
+	updateCustomer := domain.Customers{
 		CustomerName:    customer.CustomerName,
 		CustomerAddress: customer.CustomerAddress,
 		UpdatedAt:       customer.UpdatedAt,
@@ -119,7 +120,7 @@ func (m *Customers) Update(customer *model.Customers) error {
 	return m.DB.Where("id_customer = ?", customer.IDCustomer).Updates(updateCustomer).Error
 }
 
-func (m *Customers) Delete(customer *model.Customers) error {
-	return m.DB.Model(&model.Customers{}).Where("id_customer = ?", customer.IDCustomer).
+func (m *Customers) Delete(customer *domain.Customers) error {
+	return m.DB.Model(&domain.Customers{}).Where("id_customer = ?", customer.IDCustomer).
 		UpdateColumn("deleted_at", customer.DeletedAt).Error
 }
