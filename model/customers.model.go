@@ -25,4 +25,8 @@ type (
 		CustomerName    string `json:"customer_name" validate:"required"`
 		CustomerAddress string `json:"customer_address" validate:"required"`
 	}
+
+	RequestCustomerId struct {
+		IDCustomer string `json:"id_customer" validate:"required"`
+	}
 )

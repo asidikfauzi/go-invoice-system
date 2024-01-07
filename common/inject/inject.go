@@ -35,7 +35,7 @@ func DependencyInjection(liq InjectData) {
 	typeService := typeService.NewTypeService(typeMysql)
 	customerService := customerService.NewCustomerService(customerMysql)
 	itemService := itemService.NewItemService(itemMysql, typeMysql)
-	invoiceService := invoiceService.NewInvoiceService(invoiceMysql)
+	invoiceService := invoiceService.NewInvoiceService(invoiceMysql, customerMysql, itemMysql)
 
 	dependencies := []*inject.Object{
 		{Value: typeService, Name: "types_service"},

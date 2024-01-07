@@ -18,6 +18,18 @@ func NewInvoiceMysql(conn *gorm.DB) InvoicesMysql {
 	}
 }
 
+func (m *Invoices) Begin() *gorm.DB {
+	return m.DB.Begin()
+}
+
+func (m *Invoices) Commit() error {
+	return m.DB.Commit().Error
+}
+
+func (m *Invoices) Rollback() error {
+	return m.DB.Rollback().Error
+}
+
 func (m *Invoices) GetAll(limit, offset int, orderBy string, request model.RequestInvoices) ([]model.GetInvoices, int64, error) {
 	var (
 		invoices   []domain.Invoices
@@ -65,9 +77,9 @@ func (m *Invoices) GetAll(limit, offset int, orderBy string, request model.Reque
 	}
 
 	if orderBy != "" {
-		query = query.Order("invoices.invoice_id " + orderBy)
+		query = query.Order("invoices.created_at " + orderBy)
 	} else {
-		query = query.Order("invoices.invoice_id ASC")
+		query = query.Order("invoices.created_at ASC")
 	}
 
 	if err := query.Preload("Customers").
@@ -158,4 +170,40 @@ func (m *Invoices) FindById(invoiceId string) (model.GetInvoice, error) {
 	}
 
 	return data, nil
+}
+
+func (m *Invoices) CheckExistsInvoiceId(invoiceId string) (bool, error) {
+	var (
+		invoice domain.Invoices
+		err     error
+	)
+
+	if err = m.DB.Where("invoice_id = ?", invoiceId).
+		First(&invoice).Error; err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (m *Invoices) Create(invoice *domain.Invoices, items []domain.InvoiceHasItems) error {
+	tx := m.DB.Begin()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := m.DB.Create(invoice).Error; err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		if err := m.DB.Create(item).Error; err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit().Error
 }

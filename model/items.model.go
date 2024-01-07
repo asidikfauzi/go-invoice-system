@@ -33,4 +33,9 @@ type (
 		ItemPrice    float64 `json:"item_price" validate:"required,number"`
 		TypeID       string  `json:"type_id" validate:"required"`
 	}
+
+	RequestItemInvoice struct {
+		IDItem       string  `json:"id_item" validate:"required"`
+		ItemQuantity float64 `json:"item_quantity" validate:"required,number"`
+	}
 )
