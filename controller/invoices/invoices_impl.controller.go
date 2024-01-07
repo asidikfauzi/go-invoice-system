@@ -72,3 +72,30 @@ func (m *MasterInvoices) CreateInvoice(c *gin.Context) {
 	return
 
 }
+
+func (m *MasterInvoices) UpdateInvoice(c *gin.Context) {
+	startTime := time.Now()
+
+	invoiceId := c.Param("invoiceId")
+	var request model.RequestInvoice
+	if err := c.ShouldBindJSON(&request); err != nil {
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return
+	}
+
+	validate := validator.ValidatorMessage(request)
+	if len(validate) > 0 {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, validate, startTime)
+		return
+	}
+
+	msg, err := m.InvoiceService.UpdateInvoice(c, request, invoiceId, startTime)
+	if err != nil {
+		log.Printf("error item controller UpdateItem :%s", err)
+		return
+	}
+
+	helper.ResponseAPI(c, true, http.StatusOK, helper.Success, []string{msg}, startTime)
+	return
+
+}

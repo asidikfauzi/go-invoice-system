@@ -66,6 +66,7 @@ func (r *RouteService) InitRouter() {
 			invoices.GET("", r.InvoiceService.GetAllInvoices)
 			invoices.GET("/:invoiceId", r.InvoiceService.FindInvoiceById)
 			invoices.POST("", r.InvoiceService.CreateInvoice)
+			invoices.PATCH("/:invoiceId", r.InvoiceService.UpdateInvoice)
 		}
 
 	}

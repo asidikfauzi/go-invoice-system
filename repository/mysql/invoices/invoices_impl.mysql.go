@@ -186,24 +186,26 @@ func (m *Invoices) CheckExistsInvoiceId(invoiceId string) (bool, error) {
 	return true, nil
 }
 
-func (m *Invoices) Create(invoice *domain.Invoices, items []domain.InvoiceHasItems) error {
-	tx := m.DB.Begin()
+func (m *Invoices) FindInvoiceHasItems(invoiceId string) ([]model.GetInvoiceHasItem, error) {
+	var (
+		invoiceHasItem []domain.InvoiceHasItems
+		data           []model.GetInvoiceHasItem
+		err            error
+	)
 
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := m.DB.Create(invoice).Error; err != nil {
-		return err
+	if err = m.DB.Where("invoice_id = ?", invoiceId).Find(&invoiceHasItem).Error; err != nil {
+		return data, err
 	}
 
-	for _, item := range items {
-		if err := m.DB.Create(item).Error; err != nil {
-			return err
+	for _, ihi := range invoiceHasItem {
+		inHasIt := model.GetInvoiceHasItem{
+			InvoiceID: ihi.InvoiceID,
+			ItemID:    ihi.ItemID,
+			Quantity:  ihi.Quantity,
 		}
+
+		data = append(data, inHasIt)
 	}
 
-	return tx.Commit().Error
+	return data, nil
 }

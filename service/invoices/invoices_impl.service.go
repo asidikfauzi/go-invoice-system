@@ -1,6 +1,7 @@
 package invoices
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 	"go-invoice-system/repository/mysql/customers"
 	"go-invoice-system/repository/mysql/invoices"
 	"go-invoice-system/repository/mysql/items"
+	"gorm.io/gorm"
 	"log"
 	"math"
 	"net/http"
@@ -222,4 +224,226 @@ func (s *Invoice) CreateInvoice(c *gin.Context, request model.RequestInvoice, st
 	}
 
 	return helper.SuccessCreatedData, nil
+}
+
+func (s *Invoice) UpdateInvoice(c *gin.Context, request model.RequestInvoice, invoiceId string, startTime time.Time) (string, error) {
+	var (
+		invoiceHasItems    []domain.InvoiceHasItems
+		invoice            domain.Invoices
+		getItem            model.GetItem
+		updateItems        []domain.Items
+		getDataInvoiceItem []model.GetInvoiceHasItem
+		notFoundItemIDs    []uuid.UUID
+		err                error
+	)
+
+	_, err = s.invoiceMysql.FindById(invoiceId)
+	if err != nil {
+		err = fmt.Errorf("invoice_id '%s' not found", invoiceId)
+		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	issueDate, err := time.Parse("2006-01-02", request.InvoiceIssueDate)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	dueDate, err := time.Parse("2006-01-02", request.InvoiceIssueDate)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	_, err = s.customerMysql.FindById(request.Customer.IDCustomer)
+	if err != nil {
+		err = fmt.Errorf("customer_id '%s' not found", request.Customer.IDCustomer)
+		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	customerIdUuid, err := uuid.Parse(request.Customer.IDCustomer)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	invoice = domain.Invoices{
+		CustomerID:        customerIdUuid,
+		InvoiceSubject:    request.InvoiceSubject,
+		InvoiceIssueDate:  issueDate,
+		InvoiceDueDate:    dueDate,
+		InvoiceTotalItem:  request.InvoiceTotalItem,
+		InvoiceSubTotal:   request.InvoiceSubTotal,
+		InvoiceTax:        request.InvoiceTax,
+		InvoiceGrandTotal: request.InvoiceGrandTotal,
+		InvoiceStatus:     request.InvoiceStatus,
+		CreatedAt:         time.Now(),
+	}
+
+	invoiceIdUuid, errUuid := uuid.Parse(invoiceId)
+	if errUuid != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{errUuid.Error()}, startTime)
+		return "", errUuid
+	}
+
+	getDataInvoiceItem, err = s.invoiceMysql.FindInvoiceHasItems(invoiceId)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	for i, item := range request.Items {
+
+		getItem, err = s.itemMysql.FindById(item.IDItem)
+		if err != nil {
+			err = fmt.Errorf("item_id.%d '%s' not found", i, request.Customer.IDCustomer)
+			helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+			return "", err
+		}
+
+		if item.ItemQuantity > getItem.ItemQuantity {
+			err = fmt.Errorf("item_id.%d with count %f is insufficient", i, item.ItemQuantity)
+			helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+			return "", err
+		}
+
+		itemIdUuid, errUuid := uuid.Parse(item.IDItem)
+		if errUuid != nil {
+			helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{errUuid.Error()}, startTime)
+			return "", errUuid
+		}
+
+		invoiceItems := domain.InvoiceHasItems{
+			InvoiceID: invoiceIdUuid,
+			ItemID:    itemIdUuid,
+			Quantity:  item.ItemQuantity,
+			CreatedAt: time.Now(),
+		}
+		invoiceHasItems = append(invoiceHasItems, invoiceItems)
+
+		newItemQuantity := getItem.ItemQuantity - item.ItemQuantity
+
+		updateItem := domain.Items{
+			IDItem:       itemIdUuid,
+			ItemQuantity: newItemQuantity,
+		}
+		updateItems = append(updateItems, updateItem)
+	}
+
+	for _, ihi := range getDataInvoiceItem {
+		found := false
+		for _, item := range invoiceHasItems {
+			if ihi.ItemID == item.ItemID {
+				found = true
+				fmt.Println(item.ItemID)
+			}
+		}
+		if !found {
+			notFoundItemIDs = append(notFoundItemIDs, ihi.ItemID)
+		}
+	}
+
+	tx := s.invoiceMysql.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	err = tx.Model(&domain.Invoices{}).Where("id_invoice = ?", invoiceId).Updates(&invoice).Error
+	if err != nil {
+		tx.Rollback()
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	for _, notFoundItemID := range notFoundItemIDs {
+		deleteTime := time.Now()
+		deleteIhi := domain.InvoiceHasItems{
+			DeletedAt: &deleteTime,
+		}
+
+		err = tx.Model(&domain.InvoiceHasItems{}).
+			Where("invoice_id = ?", invoiceId).
+			Where("item_id = ?", notFoundItemID).
+			Delete(&deleteIhi).Error
+		if err != nil {
+			tx.Rollback()
+			helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+			return "", err
+		}
+	}
+
+	for _, item := range invoiceHasItems {
+
+		newItemQuantity := getItem.ItemQuantity - item.Quantity
+
+		err = tx.Where("invoice_id = ? AND item_id = ?", invoiceId, item.ItemID).First(&item).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = tx.Create(&item).Error
+				if err != nil {
+					tx.Rollback()
+					helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+					return "", err
+				}
+			} else {
+				tx.Rollback()
+				helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+				return "", err
+			}
+		} else {
+			err = tx.Model(&domain.InvoiceHasItems{}).
+				Where("invoice_id = ?", invoiceId).
+				Where("item_id = ?", item.ItemID).
+				Updates(&item).Error
+			if err != nil {
+				tx.Rollback()
+				helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+				return "", err
+			}
+		}
+
+		updateItem := domain.Items{
+			IDItem:       item.ItemID,
+			ItemQuantity: newItemQuantity,
+		}
+		updateItems = append(updateItems, updateItem)
+	}
+
+	for _, notFoundItemID := range notFoundItemIDs {
+		deleteTime := time.Now()
+		deleteIhi := domain.InvoiceHasItems{
+			DeletedAt: &deleteTime,
+		}
+
+		err = tx.Model(&domain.InvoiceHasItems{}).
+			Where("invoice_id = ?", invoiceId).
+			Where("item_id = ?", notFoundItemID).
+			Delete(&deleteIhi).Error
+		if err != nil {
+			tx.Rollback()
+			helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+			return "", err
+		}
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	for _, updateItem := range updateItems {
+		err = s.itemMysql.Update(&updateItem)
+		if err != nil {
+			helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+			return "", err
+		}
+	}
+
+	return helper.SuccessUpdatedData, nil
 }

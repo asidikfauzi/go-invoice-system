@@ -47,6 +47,12 @@ type (
 		Items             []GetItem   `json:"items"`
 	}
 
+	GetInvoiceHasItem struct {
+		InvoiceID uuid.UUID `json:"invoice_id"`
+		ItemID    uuid.UUID `json:"item_id"`
+		Quantity  float64   `json:"quantity"`
+	}
+
 	RequestInvoices struct {
 		InvoiceID        string `json:"invoice_id"`
 		InvoiceSubject   string `json:"invoice_subject"`
