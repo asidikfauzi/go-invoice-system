@@ -2,7 +2,6 @@ package types
 
 import (
 	"go-invoice-system/model"
-	"go-invoice-system/model/domain"
 	"gorm.io/gorm"
 )
 
@@ -16,9 +15,10 @@ func NewTypeMysql(conn *gorm.DB) TypesMysql {
 	}
 }
 
-func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.Types, int64, error) {
+func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.GetType, int64, error) {
 	var (
 		types      []model.Types
+		data       []model.GetType
 		totalCount int64
 	)
 
@@ -42,29 +42,73 @@ func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.Typ
 		return nil, 0, err
 	}
 
-	return types, totalCount, nil
+	for _, t := range types {
+		typ := model.GetType{
+			IDType:   t.IDType,
+			TypeName: t.TypeName,
+		}
+		data = append(data, typ)
+	}
+
+	return data, totalCount, nil
 }
 
-func (m *Types) FindById(typeId string) (model.Types, error) {
-	var typ model.Types
+func (m *Types) FindById(typeId string) (model.GetType, error) {
+	var (
+		typ  model.Types
+		data model.GetType
+	)
 
 	if err := m.DB.Where("id_type = ?", typeId).First(&typ).Error; err != nil {
-		return typ, err
+		return data, err
 	}
 
-	return typ, nil
+	data = model.GetType{
+		IDType:   typ.IDType,
+		TypeName: typ.TypeName,
+	}
+
+	return data, nil
 }
 
-func (m *Types) FindByName(typeName string) (model.Types, error) {
-	var typ model.Types
+func (m *Types) FindByName(typeName string) (model.GetType, error) {
+	var (
+		typ  model.Types
+		data model.GetType
+	)
 
 	if err := m.DB.Where("type_name = ?", typeName).First(&typ).Error; err != nil {
-		return typ, err
+		return data, err
 	}
 
-	return typ, nil
+	data = model.GetType{
+		IDType:   typ.IDType,
+		TypeName: typ.TypeName,
+	}
+
+	return data, nil
 }
 
-func (m *Types) Create(typ *domain.Types) error {
+func (m *Types) CheckUpdateExists(typ model.Types) (bool, error) {
+	err := m.DB.Where("type_name = ?", typ.TypeName).
+		Where("id_type != ? ", typ.IDType).
+		Where("deleted_at IS NULL").First(&typ).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (m *Types) Create(typ *model.Types) error {
 	return m.DB.Create(typ).Error
+}
+
+func (m *Types) Update(typ *model.Types) error {
+	updateType := model.Types{
+		TypeName:  typ.TypeName,
+		UpdatedAt: typ.UpdatedAt,
+	}
+	return m.DB.Where("id_type = ?", typ.IDType).Updates(updateType).Error
 }

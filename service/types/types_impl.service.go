@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/model"
-	"go-invoice-system/model/domain"
 	"go-invoice-system/repository/mysql/types"
 	"log"
 	"math"
@@ -24,9 +23,9 @@ func NewTypeService(tm types.TypesMysql) TypesService {
 	}
 }
 
-func (s *Type) GetAllTypes(c *gin.Context, pageParam, limitParam, orderByParam, typeName string, startTime time.Time) ([]model.Types, helper.Paginate, error) {
+func (s *Type) GetAllTypes(c *gin.Context, pageParam, limitParam, orderByParam, typeName string, startTime time.Time) ([]model.GetType, helper.Paginate, error) {
 	var (
-		dataTypes []model.Types
+		dataTypes []model.GetType
 		paginate  helper.Paginate
 		totalData int64
 		err       error
@@ -57,9 +56,9 @@ func (s *Type) GetAllTypes(c *gin.Context, pageParam, limitParam, orderByParam, 
 	return dataTypes, paginate, nil
 }
 
-func (s *Type) FindTypeById(c *gin.Context, typeId string, startTime time.Time) (model.Types, error) {
+func (s *Type) FindTypeById(c *gin.Context, typeId string, startTime time.Time) (model.GetType, error) {
 	var (
-		typ model.Types
+		typ model.GetType
 		err error
 	)
 
@@ -84,7 +83,7 @@ func (s *Type) CreateType(c *gin.Context, request model.RequestType, startTime t
 		return "", err
 	}
 
-	types := domain.Types{
+	types := model.Types{
 		IDType:    uuid.New(),
 		TypeName:  request.TypeName,
 		CreatedAt: time.Now(),
@@ -97,4 +96,43 @@ func (s *Type) CreateType(c *gin.Context, request model.RequestType, startTime t
 	}
 
 	return helper.SuccessCreatedData, nil
+}
+
+func (s *Type) UpdateType(c *gin.Context, request model.RequestType, typeId string, startTime time.Time) (string, error) {
+	var err error
+
+	_, err = s.typeMysql.FindById(typeId)
+	if err != nil {
+		err = fmt.Errorf("type_id '%s' not found", typeId)
+		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	typeIdUuid, err := uuid.Parse(typeId)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	timeUpdate := time.Now()
+	types := model.Types{
+		IDType:    typeIdUuid,
+		TypeName:  request.TypeName,
+		UpdatedAt: &timeUpdate,
+	}
+
+	exists, _ := s.typeMysql.CheckUpdateExists(types)
+	if exists == true {
+		err = fmt.Errorf("type_name '%s' already exists", request.TypeName)
+		helper.ResponseAPI(c, false, http.StatusConflict, helper.Conflict, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	err = s.typeMysql.Update(&types)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	return helper.SuccessUpdatedData, nil
 }

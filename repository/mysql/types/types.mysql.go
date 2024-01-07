@@ -2,12 +2,13 @@ package types
 
 import (
 	"go-invoice-system/model"
-	"go-invoice-system/model/domain"
 )
 
 type TypesMysql interface {
-	GetAll(limit, offset int, orderBy, typeName string) ([]model.Types, int64, error)
-	FindById(typeId string) (model.Types, error)
-	FindByName(typeName string) (model.Types, error)
-	Create(typ *domain.Types) error
+	GetAll(limit, offset int, orderBy, typeName string) ([]model.GetType, int64, error)
+	FindById(typeId string) (model.GetType, error)
+	FindByName(typeName string) (model.GetType, error)
+	CheckUpdateExists(typ model.Types) (bool, error)
+	Create(typ *model.Types) error
+	Update(typ *model.Types) error
 }

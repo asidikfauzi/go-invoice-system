@@ -2,10 +2,18 @@ package model
 
 import (
 	"github.com/google/uuid"
+	"time"
 )
 
 type (
 	Types struct {
+		IDType    uuid.UUID  `json:"id_type"`
+		TypeName  string     `json:"type_name"`
+		CreatedAt time.Time  `json:"created_at"`
+		UpdatedAt *time.Time `json:"updated_at"`
+	}
+
+	GetType struct {
 		IDType   uuid.UUID `json:"id_type"`
 		TypeName string    `json:"type_name"`
 	}
