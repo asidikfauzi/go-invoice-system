@@ -2,6 +2,7 @@ package types
 
 import (
 	"go-invoice-system/model"
+	"go-invoice-system/model/domain"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ func NewTypeMysql(conn *gorm.DB) TypesMysql {
 
 func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.GetType, int64, error) {
 	var (
-		types      []model.Types
+		types      []domain.Types
 		data       []model.GetType
 		totalCount int64
 	)
@@ -38,7 +39,7 @@ func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.Get
 		return nil, totalCount, err
 	}
 
-	if err := query.Model(&model.Types{}).Count(&totalCount).Error; err != nil {
+	if err := query.Model(&domain.Types{}).Count(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -55,7 +56,7 @@ func (m *Types) GetAll(limit, offset int, orderBy, typeName string) ([]model.Get
 
 func (m *Types) FindById(typeId string) (model.GetType, error) {
 	var (
-		typ  model.Types
+		typ  domain.Types
 		data model.GetType
 	)
 
@@ -75,7 +76,7 @@ func (m *Types) FindById(typeId string) (model.GetType, error) {
 
 func (m *Types) FindByName(typeName string) (model.GetType, error) {
 	var (
-		typ  model.Types
+		typ  domain.Types
 		data model.GetType
 	)
 
@@ -91,7 +92,7 @@ func (m *Types) FindByName(typeName string) (model.GetType, error) {
 	return data, nil
 }
 
-func (m *Types) CheckUpdateExists(typ model.Types) (bool, error) {
+func (m *Types) CheckUpdateExists(typ domain.Types) (bool, error) {
 	err := m.DB.Where("type_name = ?", typ.TypeName).
 		Where("id_type != ? ", typ.IDType).
 		Where("deleted_at IS NULL").First(&typ).Error
@@ -103,19 +104,19 @@ func (m *Types) CheckUpdateExists(typ model.Types) (bool, error) {
 	return true, nil
 }
 
-func (m *Types) Create(typ *model.Types) error {
+func (m *Types) Create(typ *domain.Types) error {
 	return m.DB.Create(typ).Error
 }
 
-func (m *Types) Update(typ *model.Types) error {
-	updateType := model.Types{
+func (m *Types) Update(typ *domain.Types) error {
+	updateType := domain.Types{
 		TypeName:  typ.TypeName,
 		UpdatedAt: typ.UpdatedAt,
 	}
 	return m.DB.Where("id_type = ?", typ.IDType).Updates(updateType).Error
 }
 
-func (m *Types) Delete(typ *model.Types) error {
-	return m.DB.Model(&model.Types{}).Where("id_type = ?", typ.IDType).
+func (m *Types) Delete(typ *domain.Types) error {
+	return m.DB.Model(&domain.Types{}).Where("id_type = ?", typ.IDType).
 		UpdateColumn("deleted_at", typ.DeletedAt).Error
 }

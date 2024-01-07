@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"go-invoice-system/common/helper"
 	"go-invoice-system/model"
+	"go-invoice-system/model/domain"
 	"go-invoice-system/repository/mysql/types"
 	"log"
 	"math"
@@ -83,7 +84,7 @@ func (s *Type) CreateType(c *gin.Context, request model.RequestType, startTime t
 		return "", err
 	}
 
-	types := model.Types{
+	types := domain.Types{
 		IDType:    uuid.New(),
 		TypeName:  request.TypeName,
 		CreatedAt: time.Now(),
@@ -115,7 +116,7 @@ func (s *Type) UpdateType(c *gin.Context, request model.RequestType, typeId stri
 	}
 
 	timeUpdate := time.Now()
-	types := model.Types{
+	types := domain.Types{
 		IDType:    typeIdUuid,
 		TypeName:  request.TypeName,
 		UpdatedAt: &timeUpdate,
@@ -154,7 +155,7 @@ func (s *Type) DeleteType(c *gin.Context, typeId string, startTime time.Time) (s
 	}
 
 	timeDelete := time.Now()
-	types := model.Types{
+	types := domain.Types{
 		IDType:    typeIdUuid,
 		DeletedAt: &timeDelete,
 	}
