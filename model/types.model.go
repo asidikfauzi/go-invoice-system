@@ -11,6 +11,7 @@ type (
 		TypeName  string     `json:"type_name"`
 		CreatedAt time.Time  `json:"created_at"`
 		UpdatedAt *time.Time `json:"updated_at"`
+		DeletedAt *time.Time `json:"deleted_at"`
 	}
 
 	GetType struct {

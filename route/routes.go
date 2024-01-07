@@ -31,6 +31,7 @@ func (r *RouteService) InitRouter() {
 			types.GET("/:typeId", r.TypeService.FindTypeById)
 			types.POST("", r.TypeService.CreateType)
 			types.PATCH("/:typeId", r.TypeService.UpdateType)
+			types.DELETE("/:typeId", r.TypeService.DeleteType)
 		}
 
 	}

@@ -11,4 +11,5 @@ type TypesMysql interface {
 	CheckUpdateExists(typ model.Types) (bool, error)
 	Create(typ *model.Types) error
 	Update(typ *model.Types) error
+	Delete(typ *model.Types) error
 }

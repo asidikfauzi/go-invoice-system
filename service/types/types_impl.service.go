@@ -136,3 +136,34 @@ func (s *Type) UpdateType(c *gin.Context, request model.RequestType, typeId stri
 
 	return helper.SuccessUpdatedData, nil
 }
+
+func (s *Type) DeleteType(c *gin.Context, typeId string, startTime time.Time) (string, error) {
+	var err error
+
+	_, err = s.typeMysql.FindById(typeId)
+	if err != nil {
+		err = fmt.Errorf("type_id '%s' not found", typeId)
+		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	typeIdUuid, err := uuid.Parse(typeId)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusBadRequest, helper.BadRequest, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	timeDelete := time.Now()
+	types := model.Types{
+		IDType:    typeIdUuid,
+		DeletedAt: &timeDelete,
+	}
+
+	err = s.typeMysql.Delete(&types)
+	if err != nil {
+		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
+		return "", err
+	}
+
+	return helper.SuccessDeletedData, nil
+}

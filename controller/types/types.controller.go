@@ -10,6 +10,7 @@ type TypeController interface {
 	FindTypeById(c *gin.Context)
 	CreateType(c *gin.Context)
 	UpdateType(c *gin.Context)
+	DeleteType(c *gin.Context)
 }
 
 type MasterTypes struct {

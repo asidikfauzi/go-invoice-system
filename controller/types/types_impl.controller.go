@@ -91,7 +91,22 @@ func (m *MasterTypes) UpdateType(c *gin.Context) {
 
 	msg, err := m.TypeService.UpdateType(c, request, typeId, startTime)
 	if err != nil {
-		log.Printf("error type controller CreateType :%s", err)
+		log.Printf("error type controller UpdateType :%s", err)
+		return
+	}
+
+	helper.ResponseAPI(c, true, http.StatusOK, helper.Success, []string{msg}, startTime)
+	return
+
+}
+
+func (m *MasterTypes) DeleteType(c *gin.Context) {
+	startTime := time.Now()
+
+	typeId := c.Param("typeId")
+	msg, err := m.TypeService.DeleteType(c, typeId, startTime)
+	if err != nil {
+		log.Printf("error type controller DeleteType :%s", err)
 		return
 	}
 

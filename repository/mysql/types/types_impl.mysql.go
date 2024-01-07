@@ -112,3 +112,8 @@ func (m *Types) Update(typ *model.Types) error {
 	}
 	return m.DB.Where("id_type = ?", typ.IDType).Updates(updateType).Error
 }
+
+func (m *Types) Delete(typ *model.Types) error {
+	return m.DB.Model(&model.Types{}).Where("id_type = ?", typ.IDType).
+		UpdateColumn("deleted_at", typ.DeletedAt).Error
+}

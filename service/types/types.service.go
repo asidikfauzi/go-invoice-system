@@ -12,4 +12,5 @@ type TypesService interface {
 	FindTypeById(c *gin.Context, typeId string, startTime time.Time) (model.GetType, error)
 	CreateType(c *gin.Context, request model.RequestType, startTime time.Time) (string, error)
 	UpdateType(c *gin.Context, request model.RequestType, typeId string, startTime time.Time) (string, error)
+	DeleteType(c *gin.Context, typeId string, startTime time.Time) (string, error)
 }
