@@ -58,18 +58,18 @@ func (s *Customer) GetAllCustomers(c *gin.Context, pageParam, limitParam, orderB
 
 func (s *Customer) FindCustomerById(c *gin.Context, customerId string, startTime time.Time) (model.GetCustomer, error) {
 	var (
-		typ model.GetCustomer
-		err error
+		customer model.GetCustomer
+		err      error
 	)
 
-	typ, err = s.customerMysql.FindById(customerId)
+	customer, err = s.customerMysql.FindById(customerId)
 	if err != nil {
 		err = fmt.Errorf("customer_id '%s' not found", customerId)
 		helper.ResponseAPI(c, false, http.StatusNotFound, helper.NotFound, []string{err.Error()}, startTime)
-		return typ, err
+		return customer, err
 	}
 
-	return typ, nil
+	return customer, nil
 }
 
 func (s *Customer) CreateCustomer(c *gin.Context, request model.RequestCustomer, startTime time.Time) (string, error) {

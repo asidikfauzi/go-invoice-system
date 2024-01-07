@@ -3,11 +3,11 @@ package customers
 import "go-invoice-system/model"
 
 type CustomersMysql interface {
-	GetAll(limit, offset int, orderBy, typeName string) ([]model.GetCustomer, int64, error)
-	FindById(typeId string) (model.GetCustomer, error)
-	FindByName(typeName string) (model.GetCustomer, error)
-	CheckUpdateExists(typ model.Customers) (bool, error)
-	Create(typ *model.Customers) error
-	Update(typ *model.Customers) error
-	Delete(typ *model.Customers) error
+	GetAll(limit, offset int, orderBy, customerName string) ([]model.GetCustomer, int64, error)
+	FindById(customerId string) (model.GetCustomer, error)
+	FindByName(customerName string) (model.GetCustomer, error)
+	CheckUpdateExists(customer model.Customers) (bool, error)
+	Create(customer *model.Customers) error
+	Update(customer *model.Customers) error
+	Delete(customer *model.Customers) error
 }
