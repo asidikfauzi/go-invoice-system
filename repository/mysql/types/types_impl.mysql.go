@@ -59,7 +59,9 @@ func (m *Types) FindById(typeId string) (model.GetType, error) {
 		data model.GetType
 	)
 
-	if err := m.DB.Where("id_type = ?", typeId).First(&typ).Error; err != nil {
+	if err := m.DB.Where("id_type = ?", typeId).
+		Where("deleted_at IS NULL").
+		First(&typ).Error; err != nil {
 		return data, err
 	}
 
