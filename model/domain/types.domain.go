@@ -8,7 +8,7 @@ import (
 type Types struct {
 	IDType      uuid.UUID  `gorm:"type:char(36);unique;not null;primary_key;column:id_type" json:"id_type"`
 	TypeName    string     `gorm:"type:varchar(50);not null;" json:"type_name"`
-	CreatedAt   time.Time  `gorm:"type:timestamp;default:current_timestamp()" json:"created_at"`
+	CreatedAt   time.Time  `gorm:"default:null" json:"created_at"`
 	CreatedByID *uuid.UUID `gorm:"type:char(36);default:null" json:"created_by_id"`
 	UpdatedAt   *time.Time `gorm:"default:null" json:"updated_at"`
 	UpdatedByID *uuid.UUID `gorm:"type:char(36);default:null" json:"updated_by_id"`
