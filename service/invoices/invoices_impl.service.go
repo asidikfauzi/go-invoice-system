@@ -337,7 +337,6 @@ func (s *Invoice) UpdateInvoice(c *gin.Context, request model.RequestInvoice, in
 		for _, item := range invoiceHasItems {
 			if ihi.ItemID == item.ItemID {
 				found = true
-				fmt.Println(item.ItemID)
 			}
 		}
 		if !found {
@@ -352,35 +351,22 @@ func (s *Invoice) UpdateInvoice(c *gin.Context, request model.RequestInvoice, in
 		}
 	}()
 
-	err = tx.Model(&domain.Invoices{}).Where("id_invoice = ?", invoiceId).Updates(&invoice).Error
+	err = tx.Model(&domain.Invoices{}).Where("id_invoice = ?", invoiceId).
+		Where("deleted_at IS NULL").
+		Updates(&invoice).Error
 	if err != nil {
 		tx.Rollback()
 		helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
 		return "", err
 	}
 
-	for _, notFoundItemID := range notFoundItemIDs {
-		deleteTime := time.Now()
-		deleteIhi := domain.InvoiceHasItems{
-			DeletedAt: &deleteTime,
-		}
-
-		err = tx.Model(&domain.InvoiceHasItems{}).
-			Where("invoice_id = ?", invoiceId).
-			Where("item_id = ?", notFoundItemID).
-			Delete(&deleteIhi).Error
-		if err != nil {
-			tx.Rollback()
-			helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)
-			return "", err
-		}
-	}
-
 	for _, item := range invoiceHasItems {
 
 		newItemQuantity := getItem.ItemQuantity - item.Quantity
 
-		err = tx.Where("invoice_id = ? AND item_id = ?", invoiceId, item.ItemID).First(&item).Error
+		err = tx.Where("invoice_id = ? AND item_id = ?", invoiceId, item.ItemID).
+			Where("deleted_at IS NULL").
+			First(&item).Error
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				err = tx.Create(&item).Error
@@ -398,6 +384,7 @@ func (s *Invoice) UpdateInvoice(c *gin.Context, request model.RequestInvoice, in
 			err = tx.Model(&domain.InvoiceHasItems{}).
 				Where("invoice_id = ?", invoiceId).
 				Where("item_id = ?", item.ItemID).
+				Where("deleted_at IS NULL").
 				Updates(&item).Error
 			if err != nil {
 				tx.Rollback()
@@ -422,7 +409,8 @@ func (s *Invoice) UpdateInvoice(c *gin.Context, request model.RequestInvoice, in
 		err = tx.Model(&domain.InvoiceHasItems{}).
 			Where("invoice_id = ?", invoiceId).
 			Where("item_id = ?", notFoundItemID).
-			Delete(&deleteIhi).Error
+			Where("deleted_at IS NULL").
+			Updates(&deleteIhi).Error
 		if err != nil {
 			tx.Rollback()
 			helper.ResponseAPI(c, false, http.StatusInternalServerError, helper.InternalServerError, []string{err.Error()}, startTime)

@@ -179,6 +179,7 @@ func (m *Invoices) CheckExistsInvoiceId(invoiceId string) (bool, error) {
 	)
 
 	if err = m.DB.Where("invoice_id = ?", invoiceId).
+		Where("deleted_at IS NULL").
 		First(&invoice).Error; err != nil {
 		return false, err
 	}
@@ -193,7 +194,9 @@ func (m *Invoices) FindInvoiceHasItems(invoiceId string) ([]model.GetInvoiceHasI
 		err            error
 	)
 
-	if err = m.DB.Where("invoice_id = ?", invoiceId).Find(&invoiceHasItem).Error; err != nil {
+	if err = m.DB.Where("invoice_id = ?", invoiceId).
+		Where("deleted_at IS NULL").
+		Find(&invoiceHasItem).Error; err != nil {
 		return data, err
 	}
 

@@ -22,13 +22,8 @@ mod:
 build-main:
 	rm -f $(APP_DIR)/$(BIN_NAME)/$(BIN_NAME)
 	$(GO_BUILD) -o $(APP_DIR)/$(BIN_NAME)/$(BIN_NAME) $(APP_DIR)/${BIN_NAME}/app.go
-build-cron:
-	rm -f $(APP_DIR)/$(CRON_BIN_NAME)/$(CRON_BIN_NAME)
-	$(GO_BUILD) -o $(APP_DIR)/$(CRON_BIN_NAME)/$(CRON_BIN_NAME) $(APP_DIR)/${CRON_BIN_NAME}/main.go
 run:
 	./$(APP_DIR)/$(BIN_NAME)/$(BIN_NAME)
-run-cron:
-	./$(APP_DIR)/$(CRON_BIN_NAME)/$(CRON_BIN_NAME)
 migrate-run:
 	rm -f $(APP_DIR)/$(BIN_MIGRATE_NAME)/$(BIN_MIGRATE_NAME)
 	$(GO_BUILD) -o $(APP_DIR)/$(BIN_MIGRATE_NAME)/$(BIN_MIGRATE_NAME) $(APP_DIR)/${BIN_MIGRATE_NAME}/migrate.go
